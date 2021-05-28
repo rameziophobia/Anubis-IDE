@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from pathlib import Path
 
+
 def serial_ports():
     """ Lists serial port names
         :raises EnvironmentError:
@@ -66,6 +67,7 @@ class Signal(QObject):
 #
 #
 
+
 # Making text editor as A global variable (to solve the issue of being local to (self) in widget class)
 text = QTextEdit
 text2 = QTextEdit
@@ -81,10 +83,13 @@ text2 = QTextEdit
 #
 
 # this class is made to connect the QTab with the necessary layouts
+
+
 class text_widget(QWidget):
     def __init__(self):
         super().__init__()
         self.itUI()
+
     def itUI(self):
         global text
         text = QTextEdit()
@@ -94,13 +99,11 @@ class text_widget(QWidget):
         self.setLayout(hbox)
 
 
-
 #
 #
 ############ end of Class ############
 #
 #
-
 
 
 #
@@ -144,7 +147,8 @@ class Widget(QWidget):
         # NoDotAndDotDot => Do not list the special entries "." and "..".
         # AllDirs =>List all directories; i.e. don't apply the filters to directory names.
         # Files => List files.
-        self.dirModel.setFilter(QDir.NoDotAndDotDot | QDir.AllDirs | QDir.Files)
+        self.dirModel.setFilter(QDir.NoDotAndDotDot |
+                                QDir.AllDirs | QDir.Files)
         self.treeview.setModel(self.dirModel)
         self.treeview.setRootIndex(self.dirModel.index(path))
         self.treeview.clicked.connect(self.on_clicked)
@@ -201,7 +205,7 @@ class Widget(QWidget):
         nn = tuple([nn])
 
         if nn[0]:
-            f = open(nn[0],'r')
+            f = open(nn[0], 'r')
             with f:
                 data = f.read()
                 text.setText(data)
@@ -236,6 +240,8 @@ def Openning(s):
 #
 #
 #
+
+
 class UI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -294,11 +300,9 @@ class UI(QMainWindow):
         Open_Action.setShortcut("Ctrl+O")
         Open_Action.triggered.connect(self.open)
 
-
         filemenu.addAction(Save_Action)
         filemenu.addAction(Close_Action)
         filemenu.addAction(Open_Action)
-
 
         # Seting the window Geometry
         self.setGeometry(200, 150, 600, 500)
@@ -316,7 +320,7 @@ class UI(QMainWindow):
         if self.port_flag == 0:
             mytext = text.toPlainText()
         #
-        ##### Compiler Part
+        # Compiler Part
         #
 #            ide.create_file(mytext)
 #            ide.upload_file(self.portNo)
@@ -333,19 +337,18 @@ class UI(QMainWindow):
         self.portNo = action.text()
         self.port_flag = 0
 
-
-
     # I made this function to save the code into a file
+
     def save(self):
         self.b.reading.emit("name")
 
-
     # I made this function to open a file and exhibits it to the user in a text editor
+
     def open(self):
-        file_name = QFileDialog.getOpenFileName(self,'Open File','/home')
+        file_name = QFileDialog.getOpenFileName(self, 'Open File', '/home')
 
         if file_name[0]:
-            f = open(file_name[0],'r')
+            f = open(file_name[0], 'r')
             with f:
                 data = f.read()
             self.Open_Signal.reading.emit(data)
