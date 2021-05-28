@@ -6,6 +6,9 @@
 import sys
 import glob
 import serial
+from io import StringIO
+import types
+import inspect
 
 import Python_Coloring
 from PyQt5 import QtCore
@@ -262,10 +265,11 @@ class UI(QMainWindow):
         # creating menu items
         menu = self.menuBar()
 
-        # I have three menu items
+        # I have four menu items
         filemenu = menu.addMenu('File')
         Port = menu.addMenu('Port')
         Run = menu.addMenu('Run')
+        self.fast_execution_menu = menu.addMenu('Fast Exec')
 
         # As any PC or laptop have many ports, so I need to list them to the User
         # so I made (Port_Action) to add the Ports got from (serial_ports()) function
@@ -308,7 +312,9 @@ class UI(QMainWindow):
         self.setGeometry(200, 150, 600, 500)
         self.setWindowTitle('Anubis IDE')
         self.setWindowIcon(QtGui.QIcon('Anubis.png'))
-        
+
+        self.fast_execution_menu.aboutToShow.connect(
+            self.add_functions_to_fast_exec_menu)
 
         widget = Widget()
 
@@ -329,6 +335,69 @@ class UI(QMainWindow):
         else:
             text2.append("Please Select Your Port Number First")
 
+    def add_functions_to_fast_exec_menu(self):
+        self.fast_execution_menu.clear()
+        functions = self.get_functions_from_text()
+        for function_name, function in functions:
+            action_execute_func = QAction(function_name, self)
+            action_execute_func.triggered.connect(
+                self.execute_fast_exec_function(function_name, function))
+            self.fast_execution_menu.addAction(action_execute_func)
+
+    def execute_fast_exec_function(self, functionName, functionObject):
+        def callback():
+            stdout = StringIO()
+            old_std_out = sys.stdin
+            sys.stdout = stdout
+
+            text2.append("========== fast executing function " +
+                         functionName + " ==========")
+            parameter_values = self.get_fast_exec_func_params(functionObject)
+            if parameter_values is None:
+                QMessageBox.information(
+                    self, "Operation Cancelled", "Function execution cancelled by the user")
+                text2.append("====== fast execution of function " +
+                             functionName + " terminated ======")
+                return
+            retValue = None
+            try:
+                retValue = eval("functionObject(" + parameter_values + ")")
+            except:
+                text2.append("======= fast execution of function " +
+                             functionName + " failed =======")
+                return
+            finally:
+                sys.stdout = old_std_out
+
+            if stdout.getvalue():
+                text2.append('The function printed:')
+                text2.append(stdout.getvalue())
+            text2.append(functionName + " returned: " + repr(retValue))
+            text2.append("====== fast execution of function " +
+                         functionName + " terminated ======")
+            text2.append('\n')
+        return callback
+
+    def get_functions_from_text(self):
+        codeString = text.toPlainText()
+        codeModule = types.ModuleType('codeModule')
+        try:
+            exec(codeString, codeModule.__dict__)
+        except:
+            pass
+        return [(function_name, function) for function_name, function in inspect.getmembers(codeModule) if inspect.isfunction(function)]
+
+    def get_fast_exec_func_params(self, function_object):
+        arguments, _, _, _, _, _, _ = inspect.getfullargspec(function_object)
+        if len(arguments) == 0:
+            return ''
+
+        message = "Please enter parameter values separated by commas ','"
+        text_input, isOkPressed = QInputDialog.getText(
+            self, "Function Paramaters", message)
+        if not isOkPressed:
+            return None
+        return text_input.strip()
 
     # this function is made to get which port was selected by the user
     @QtCore.pyqtSlot()
